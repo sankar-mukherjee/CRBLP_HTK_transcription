@@ -3,7 +3,7 @@ CRBLP_HTK_transcription
 
 Automatic transcription of CRBLP speech corpus (Bengali) using HTK toolkit
 
-
+CRBLP speech corpus ---> http://www.panl10n.net/center-for-research-on-bangla-language-processing-crblp-bangladesh/
 ============================================================================
 auto_trans	=	main script
 
