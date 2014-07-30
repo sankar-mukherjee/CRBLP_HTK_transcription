@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+
+# Sankar Mukherjee
+
+f = open("crblp_lexicon", "r")
+# omit empty lines and lines containing only whitespace
+lines = [line for line in f if line.strip()]
+f.close()
+lines.sort()
+
+f = open('myfile','w')
+f.writelines(lines)
+f.close()

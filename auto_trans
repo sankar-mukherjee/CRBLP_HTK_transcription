@@ -1,0 +1,101 @@
+#!/bin/sh
+
+#BY Sankar Mukherjee	(sankar1535@gmail.com)
+# IITKGP
+
+cp ./data/prompts  prompts.new
+echo '*/SYSTEM SENT-END SENT-START' >> prompts.new
+perl ./scripts/prompts2wlist prompts.new wlist
+rm prompts.new
+HDMan -A -D -T 1 -m -g ./scripts/global.ded -w wlist -n monophones1 -i -l dlog dict ./lexicon/crblp_lexicon
+#perl ./scripts/prompts2mlf words.mlf ./data/prompts
+HLEd -A -D -T 1 -l '*' -d dict -i phones0.mlf ./scripts/mkphones0.led words.mlf 
+HLEd -A -D -T 1 -l '*' -d dict -i phones1.mlf ./scripts/mkphones1.led words.mlf
+
+perl ./scripts/select_right_wavs.pl
+find ./train/wav -name \*.wav -print > codetrain_wav.scp
+cp codetrain_wav.scp codetrain_mfc.scp
+sed -i 's/wav/mfc/g' codetrain_mfc.scp
+cp codetrain_mfc.scp train.scp
+paste codetrain_wav.scp codetrain_mfc.scp > codetrain.scp
+rm codetrain_wav.scp
+rm codetrain_mfc.scp
+HCopy -A -D -T 1 -C ./config/wav_config -S codetrain.scp
+
+mkdir -p HMM/hmm0
+HCompV -A -D -T 1 -C ./config/config -f 0.01 -m -S train.scp -M ./HMM/hmm0 ./addons/proto
+cp monophones1 monophonesT
+sed -i 's/sp//g' monophonesT
+sed '/^$/d' monophonesT > monophones0
+rm monophonesT
+perl ./scripts/hmmdefs_create.pl
+
+mkdir -p HMM/hmm1
+HERest -A -D -T 1 -C ./config/config -I phones0.mlf -t 250.0 150.0 1000.0 -S train.scp -H ./HMM/hmm0/macros -H ./HMM/hmm0/hmmdefs -M ./HMM/hmm1 monophones0
+mkdir -p HMM/hmm2
+HERest -A -D -T 1 -C ./config/config -I phones0.mlf -t 250.0 150.0 1000.0 -S train.scp -H ./HMM/hmm1/macros -H ./HMM/hmm1/hmmdefs -M ./HMM/hmm2 monophones0
+mkdir -p HMM/hmm3
+HERest -A -D -T 1 -C ./config/config -I phones0.mlf -t 250.0 150.0 1000.0 -S train.scp -H ./HMM/hmm2/macros -H ./HMM/hmm2/hmmdefs -M ./HMM/hmm3 monophones0
+mkdir -p HMM/hmm4
+
+cp ./HMM/hmm3/macros ./HMM/hmm4/macros
+cp ./HMM/hmm3/hmmdefs ./HMM/hmm4/hmmdefs
+perl ./scripts/sp_Fix_HMM.pl
+
+mkdir -p HMM/hmm5
+HHEd -A -D -T 1 -H ./HMM/hmm4/macros -H ./HMM/hmm4/hmmdefs -M ./HMM/hmm5 ./scripts/sil.hed monophones1
+
+mkdir -p HMM/hmm6
+HERest -A -D -T 1 -C ./config/config  -I phones1.mlf -t 250.0 150.0 3000.0 -S train.scp -H ./HMM/hmm5/macros -H  ./HMM/hmm5/hmmdefs -M ./HMM/hmm6 monophones1
+
+mkdir -p HMM/hmm7
+HERest -A -D -T 1 -C ./config/config  -I phones1.mlf -t 250.0 150.0 3000.0 -S train.scp -H ./HMM/hmm6/macros -H  ./HMM/hmm6/hmmdefs -M ./HMM/hmm7 monophones1
+
+HVite -A -D -T 1 -l '*' -o SWT -b SENT-END -C ./config/config -H ./HMM/hmm7/macros -H ./HMM/hmm7/hmmdefs -i T_aligned.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I words.mlf -S train.scp dict monophones1> HVite_log
+
+mkdir -p HMM/hmm8
+HERest -A -D -T 1 -C ./config/config -I T_aligned.mlf -t 250.0 150.0 3000.0 -S train.scp -H ./HMM/hmm7/macros -H ./HMM/hmm7/hmmdefs -M ./HMM/hmm8 monophones1 
+
+mkdir -p HMM/hmm9
+HERest -A -D -T 1 -C ./config/config -I T_aligned.mlf -t 250.0 150.0 3000.0 -S train.scp -H ./HMM/hmm8/macros -H ./HMM/hmm8/hmmdefs -M ./HMM/hmm9 monophones1 
+
+#HVite -A -D -T 1 -l '*' -o SW -b SENT-END -C ./config/config -H ./HMM/hmm9/macros -H ./HMM/hmm9/hmmdefs -i T.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I words.mlf -S train.scp dict monophones1
+
+# for not survived token-------------------------------------------------------------------------------------------------------
+
+#HERest -A -D -T 1 -C ./config/config -I T_aligned.mlf -t 250.0 150.0 3000.0 -S train_after_removing_nosurvive_token.scp -H ./HMM/hmm7/macros -H ./HMM/hmm7/hmmdefs -M ./HMM/hmm8 monophones1 
+#HERest -A -D -T 1 -C ./config/config -I T_aligned.mlf -t 250.0 150.0 3000.0 -S train_after_removing_nosurvive_token.scp -H ./HMM/hmm8/macros -H ./HMM/hmm8/hmmdefs -M ./HMM/hmm9 monophones1 
+#HVite -A -D -T 1 -l '*' -o SW -b SENT-END -C ./config/config -H ./HMM/hmm9/macros -H ./HMM/hmm9/hmmdefs -i T.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I words.mlf -S train_after_removing_nosurvive_token.scp dict monophones1
+
+#---------------------------------------------------------------------------------------------------------------------------------
+
+HLEd -A -D -T 1 -n triphones1 -l '*' -i wintri.mlf ./scripts/mktri.led T_aligned.mlf
+
+perl ./scripts/maketrihed monophones1 triphones1
+
+mkdir -p HMM/hmm10
+HHEd -A -D -T 1 -H ./HMM/hmm9/macros -H ./HMM/hmm9/hmmdefs -M ./HMM/hmm10 ./scripts/mktri.hed monophones1 
+mkdir -p HMM/hmm11
+HERest  -A -D -T 1 -C ./config/config -I wintri.mlf -t 250.0 150.0 3000.0 -S train.scp -H ./HMM/hmm10/macros -H ./HMM/hmm10/hmmdefs -M ./HMM/hmm11 triphones1 
+mkdir -p HMM/hmm12
+HERest  -A -D -T 1 -C ./config/config -I wintri.mlf -t 250.0 150.0 3000.0 -s stats -S train.scp -H ./HMM/hmm11/macros -H ./HMM/hmm11/hmmdefs -M ./HMM/hmm12 triphones1 
+
+HDMan -A -D -T 1 -b sp -n fulllist -g ./scripts/global.ded -l flog dict-tri ./lexicon/voxforge_lexicon 
+cat fulllist triphones1 > fulllist1
+perl ./scripts/fixfulllist.pl fulllist1 fulllist
+rm fulllist1
+cp ./question/question.hed tree.hed
+
+perl ./scripts/mkclscript.prl TB 350 monophones0 >> tree.hed
+echo '\n\nTR 1\n\nAU "fulllist"\nCO "tiedlist"\n\nST "trees"' >> tree.hed
+
+mkdir -p HMM/hmm13
+HHEd -A -D -T 1 -H ./HMM/hmm12/macros -H ./HMM/hmm12/hmmdefs -M ./HMM/hmm13 tree.hed triphones1
+mkdir -p HMM/hmm14
+HERest -A -D -T 1 -T 1 -C ./config/config -I wintri.mlf -s stats -t 250.0 150.0 3000.0 -S train.scp -H ./HMM/hmm13/macros -H ./HMM/hmm13/hmmdefs -M ./HMM/hmm14 tiedlist
+mkdir -p HMM/hmm15
+HERest -A -D -T 1 -T 1 -C ./config/config -I wintri.mlf -s stats -t 250.0 150.0 3000.0 -S train.scp -H ./HMM/hmm14/macros -H ./HMM/hmm14/hmmdefs -M ./HMM/hmm15 tiedlist
+
+#HVite -A -D -T 1 -l '*' -o SW -b SENT-END -C ./config/config -H ./HMM/hmm15/macros -H ./HMM/hmm15/hmmdefs -i T.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I wintri.mlf -S train.scp dict-tri tiedlist
+#HVite -A -D -T 1 -l '*' -o SW -b SENT-END -C ./config/config -H ./HMM/hmm15/macros -H ./HMM/hmm15/hmmdefs -i T.mlf -m -t 250.0 150.0 1000.0 -y lab -a -I words.mlf -S train.scp dict monophones1
+HVite -A -D -T 1 -l '*'  -a -b SENT-END -m -C ./config/config -H ./HMM/hmm15/macros -H ./HMM/hmm15/hmmdefs -m -t 250.0 150.0 1000.0 -I words.mlf  -i T.mlf -S train.scp dict tiedlist

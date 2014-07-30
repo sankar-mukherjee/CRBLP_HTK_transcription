@@ -1,0 +1,5 @@
+#!/usr/local/bin/perl
+
+open(FILE, '../monophones0') || die("Could not open file!");
+@lines = <FILE>;
+close (FILE);

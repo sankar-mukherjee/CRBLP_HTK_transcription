@@ -1,0 +1,62 @@
+WARNING: no script file ./lexicon/crblp_lexicon.ded
+
+Dictionary Usage Statistics
+---------------------------
+  Dictionary    TotalWords WordsUsed  TotalProns PronsUsed
+crblp_lexico     15622      15622      15650      15650
+        dict     15622      15622      15650      15643
+
+15622 words required, 0 missing
+
+New Phone Usage Counts
+---------------------
+  1. N     :  5886
+  2. A     :  4798
+  3. Y     :  1735
+  4. sp    : 15641
+  5. O     :  9364
+  6. B     :  3720
+  7. OI    :   236
+  8. SH    :  4088
+  9. R     :  8854
+ 10. E     :  7622
+ 11. AH    : 11350
+ 12. RX    :   530
+ 13. I     :  8787
+ 14. L     :  3324
+ 15. C     :  1107
+ 16. K     :   935
+ 17. M     :  3044
+ 18. P     :  2753
+ 19. U     :  2991
+ 20. AHX   :   253
+ 21. DH    :   713
+ 22. KH    :  4429
+ 23. T     :  4398
+ 24. TX    :  2088
+ 25. D     :  2394
+ 26. DX    :   532
+ 27. GH    :   240
+ 28. THX   :   227
+ 29. J     :  1930
+ 30. H     :  1191
+ 31. CH    :   880
+ 32. S     :  1361
+ 33. G     :  1631
+ 34. BH    :   919
+ 35. OU    :   116
+ 36. NH    :   597
+ 37. OX    :    82
+ 38. IX    :    31
+ 39. PH    :   516
+ 40. AX    :    10
+ 41. EH    :   719
+ 42. TH    :   532
+ 43. DHX   :    49
+ 44. EX    :    29
+ 45. sil   :     2
+ 46. JH    :   137
+ 47. EHX   :    16
+ 48. UX    :    64
+
+Dictionary dict created
